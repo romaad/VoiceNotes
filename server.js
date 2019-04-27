@@ -38,8 +38,8 @@ mongoose.connect(db_path, {useNewUrlParser: true}, (err) => {
 	logger.log('info', 'mongo working');
 });
 /*if save path wasn't created yet, create it*/
-if (!fs.existsSync(temp_dir))
-    fs.mkdirSync(temp_dir);
+if (!fs.existsSync(savePath))
+    fs.mkdirSync(savePath);
 /*initialize mongoose subscription model*/
 var Subscription = mongoose.model('Subscription',{ journey_id : String, trip_id : String, is_active: Boolean, time: Number });
 /*initialize records model*/
