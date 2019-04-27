@@ -2,7 +2,9 @@
 /*create express object*/
 const express = require('express'),
 /*initialize web server*/
-app = express(),   
+app = express(),
+/*path to use system path service*/
+path = require('path')   
 /*setup http server*/
 http = require('http').Server(app),
 /*initialize io socket for real-time notes updates*/
@@ -28,13 +30,16 @@ logger = new winston.createLogger({
 /*path to which server should send to user when providing autio files*/
 uploadPath = '/uploads/'
 /*path to which we save files locally*/
-savePath = __dirname + '/public/uploads/',
+savePath = path.join(process.cwd(), '/public/uploads/'),
 /*mongodb path*/
 db_path = 'mongodb://testUser:tu123123@ds127624.mlab.com:27624/messagesdb';
 /*start mongoose client*/
 mongoose.connect(db_path, {useNewUrlParser: true}, (err) => {
 	logger.log('info', 'mongo working');
 });
+/*if save path wasn't created yet, create it*/
+if (!fs.existsSync(temp_dir))
+    fs.mkdirSync(temp_dir);
 /*initialize mongoose subscription model*/
 var Subscription = mongoose.model('Subscription',{ journey_id : String, trip_id : String, is_active: Boolean, time: Number });
 /*initialize records model*/
