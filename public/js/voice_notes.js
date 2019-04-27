@@ -10,7 +10,7 @@ $(() => {
   });
   /*when user finishes their ride*/
   $("#finish").click(()=>{
-  	$.post('http://localhost:3000/finishTrip', info, (data)=>{
+  	$.post('/finishTrip', info, (data)=>{
   			console.log(data);
   			alert('finished successfully! ');
   	}).fail((err)=>{
@@ -42,7 +42,7 @@ function addNotes(note){
 /*get voice notes for current user and add them to view*/
 function getNotes(){
 	/*issue request to server to get most recent records*/
-  $.get('http://localhost:3000/getRecords',info, (data) => {
+  $.get('/getRecords',info, (data) => {
    	console.log(JSON.stringify(data));
    	/*add each note to message dic*/
    	data.forEach(addNotes);
@@ -54,7 +54,7 @@ function getNotes(){
 function subscribe(){
 	/*subscribe to journey by issuing request*/
 	console.log(info);
-   $.post('http://localhost:3000/subscribe', info, (ret)=>{
+   $.post('/subscribe', info, (ret)=>{
 			// console.log(JSON.stringify(ret));
 			//if success get notes
 			getNotes();
