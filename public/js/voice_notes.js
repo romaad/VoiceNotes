@@ -1,5 +1,5 @@
 var person = "";
-var  info = {journey_id: -1, trip_id: -1, lastTime: new Date(0)};
+var  info = {journey_id: -1, trip_id: -1, lastTime: 0};
 $(() => {
   $("#send").click(()=>{
      info.trip_id =$("#trip_id").val();
@@ -18,6 +18,7 @@ $(() => {
 })
 function addNotes(note){
 		console.log(JSON.stringify(note));
+		if(note.time <= info.time) return;
 		newElem = `<div>
 	   	${new Date(note.time).toLocaleString()}
 	   	<audio id="${note.path}"" controls>
@@ -26,14 +27,15 @@ function addNotes(note){
 			</audio>
 			</div>`;
 	   $("#messages").append(newElem);
-	   if(new Date(note.time) > info.lastTime){
-	   	info.lastTime = new Date(note.time);
+	   if(note.time > info.lastTime){
+	   	info.lastTime = note.time;
 	   }
 }
 function getNotes(){
   $.get('http://localhost:3000/getRecords',info, (data) => {
    	console.log(JSON.stringify(data));
    	data.forEach(addNotes);
+   	console.log(info);
    }).fail((err)=>{
    	alert(JSON.stringify(err));
    })
@@ -45,6 +47,7 @@ function subscribe(){
 			//if success get notes
 			getNotes();
 			// socket.close();
+			socket.removeAllListeners(info.journey_id);
 			socket.on(info.journey_id, getNotes)
    }).fail((err)=>{
    	alert(err);

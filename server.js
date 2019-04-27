@@ -23,8 +23,8 @@ mongoose.connect(db_path, {useNewUrlParser: true}, (err) => {
 	logger.log('info', 'mongo working');
 });
 var Message = mongoose.model('Message',{ name : String, message : String});
-var Subscription = mongoose.model('Subscription',{ journey_id : String, trip_id : String, is_active: Boolean, time: Date });
-var Recording = mongoose.model('Recording', {journey_id: String, time: Date});
+var Subscription = mongoose.model('Subscription',{ journey_id : String, trip_id : String, is_active: Boolean, time: Number });
+var Recording = mongoose.model('Recording', {journey_id: String, time: Number});
 app.use(express.static('public'));
 var bodyParser = require('body-parser')
 app.use(bodyParser.json());
@@ -57,7 +57,7 @@ app.post('/subscribe/', (req, res) => {
 			logger.error( error);
 			res.status(500).send(error);
 		}else{
-			var newSub = new Subscription({journey_id: req.body.journey_id, trip_id: req.body.trip_id, is_active: true, time: new Date()});
+			var newSub = new Subscription({journey_id: req.body.journey_id, trip_id: req.body.trip_id, is_active: true, time: new Date().getTime()});
 			newSub.save((err) => {
 				if(err){
 					logger.error(err);
@@ -72,7 +72,7 @@ app.post('/subscribe/', (req, res) => {
 	});
 });
 function getFilePath(journey_id, saveDate){
-	return journey_id + '_' + saveDate.getTime() + '.wav';
+	return journey_id + '_' + saveDate + '.wav';
 }
 
 function updateChildren(jid){
@@ -81,7 +81,7 @@ function updateChildren(jid){
 }
 
 app.post('/upload/:journey_id', upload.single('soundBlob'), function(req, res, next){
-	let saveDate = new Date();
+	let saveDate = new Date().getTime();
 	let fileName = getFilePath(req.params.journey_id, saveDate);
   let uploadLocation = savePath + fileName;
 	fs.writeFileSync(uploadLocation, Buffer.from(new Uint8Array(req.file.buffer))); // write the blob to the server as a file
@@ -109,9 +109,10 @@ app.get('/getRecords/', (req, res) => {
 		}
 		/* if user subscribed */
 		else if(docList.length == 1){
-			let lastTime = new Date(docList[0].time);
-			if(req.query.lastTime && new Date(req.query.lastTime) > lastTime){
-				lastTime = new Date(req.query.lastTime);
+
+			let lastTime = docList[0].time;
+			if(req.query.lastTime && req.query.lastTime > lastTime){
+				lastTime = req.query.lastTime;
 			}
 			Recording.find({journey_id: req.query.journey_id, time: {$gt: lastTime}}, (err2, docList2)=>{
 				var newList = JSON.parse(JSON.stringify(docList2));
