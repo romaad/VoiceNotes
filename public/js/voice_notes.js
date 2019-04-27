@@ -63,7 +63,7 @@ function subscribe(){
 			/*listen to this journey new records updates*/
 			socket.on(info.journey_id, getNotes)
    }).fail((err)=>{
-   	alert(err);
+   	alert(JSON.stringify(err));
    });
 }
 /*socket listener */
