@@ -12,6 +12,8 @@ $(() => {
   $("#finish").click(()=>{
   	$.post('/finishTrip', info, (data)=>{
   			console.log(data);
+  			/*stop listening to updates*/
+  			socket.removeAllListeners(info.journey_id);
   			alert('finished successfully! ');
   	}).fail((err)=>{
   			alert('error! ' + JSON.stringify(err) + ' ' + err.status);
