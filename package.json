@@ -4,8 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "npm start & sleep 5 && nodemon test.js && exit 0",
-    "start": "nodemon server.js"
+    "test": "npm start & sleep 5 && node test.js && exit 0",
+    "start": "node server.js"
   },
   "author": "",
   "license": "ISC",
