@@ -29,7 +29,7 @@ function addNotes(note){
 		/*use built in html5 audio player to play sounds*/
 		newElem = `<div>
 	   	${new Date(note.time).toLocaleString()}
-	   	<audio id="${note.path}"" controls>
+	   	<audio id="${note.path}" onplay="markPlayed(${note.time})" controls>
 			  <source src="${note.path}" type="audio/wav">
 				Your browser does not support the audio element.
 			</audio>
@@ -53,21 +53,44 @@ function getNotes(){
    	alert(JSON.stringify(err));
    })
  }
+function init(){
+	getNotes();
+	/*remove any old listener to journey*/
+	socket.removeAllListeners(info.journey_id);
+	/*listen to this journey new records updates*/
+	socket.on(info.journey_id, getNotes);
+}
 function subscribe(){
 	/*subscribe to journey by issuing request*/
 	console.log(info);
    $.post('/subscribe', info, (ret)=>{
 			// console.log(JSON.stringify(ret));
 			//if success get notes
-			getNotes();
-			/*remove any old listener to journey*/
-			socket.removeAllListeners(info.journey_id);
-			/*listen to this journey new records updates*/
-			socket.on(info.journey_id, getNotes);
+			init();
 			alert('subscribed successfully');
    }).fail((err)=>{
-   	alert(JSON.stringify(err));
+   		if(err.status == 409){
+   			/*user already subscribed*/
+   			init();
+   			alert(err.responseText);
+   		}else{
+				/*other unhandled error*/	
+	   		alert(JSON.stringify(err));
+
+   		}
    });
+}
+
+function markPlayed(noteTime){
+	$.post('/playrecord', {journey_id: info.journey_id, trip_id: info.trip_id, time:noteTime}, (ret)=>{
+		/*success, do nothing*/
+	}).fail(err=>{
+		if(err.status == 409){
+			/*already marked as played before, no need to flag anything*/
+		}else{
+			alert(JSON.stringify(err));
+		}
+	})
 }
 /*socket listener */
 var socket = io();

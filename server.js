@@ -56,7 +56,7 @@ const port = process.env.PORT || 3000;
 
 /*on root path, send subscription page*/
 app.all('/', function(req, res){
-	res.sendfile('subscribe.html', { root: __dirname + "/public/subscribe.html" } );
+	res.redirect('/subscribe.html');
 });
 /*when connecting a user, initialize a web socket*/
 io.on('connection', () =>{
@@ -71,7 +71,7 @@ app.post('/subscribe/', (req, res) => {
 	Subscription.find({journey_id: req.body.journey_id, trip_id: req.body.trip_id, is_active: true}, (err, docLis)=>{
 		if(docLis.length == 1){
 			/*already subscribed user do nothing*/
-			res.status(200).send('user already subscribed');
+			res.status(409).send('user already subscribed');
 		} else if (docLis.length > 1){
 			/*same user subscribed more than once, error, this shouldn't happen*/
 			error = 'same user subscribed more than once: ' + docLis[0].journey_id +' ' +docLis[0].trip_id;
@@ -134,18 +134,7 @@ app.post('/upload/:journey_id', upload.single('soundBlob'), function(req, res, n
   });
   
 });
-/*add user as a listener to all records and then continue execution path*/
-async function multiDocsUpdate(docs, trip_id, callback){
-	for(var i = 0 ; i < docs.length; i++){
-		if(!docs[i].users.find((entry) => entry === trip_id)){
-			/**user didn't listen to this before**/
-			/*mark user a listener*/
-			docs[i].users.push(trip_id);
-			var ret = await docs[i].save();
-		}	
-	}
-	callback(null, docs);
-}
+
 
 /*makes new list for records to return to user*/
 function makeDocs(dbdocs){
@@ -192,22 +181,46 @@ app.get('/getRecords/', (req, res) => {
 				/*find recording for this journey recorded after the subscription issued*/
 				Recording.find({journey_id: req.query.journey_id, time: {$gt: lastTime}}, (err2, docList2)=>{
 					/*make new instance of recording list*/
-					multiDocsUpdate(docList2, req.query.trip_id,(err, newDocs)=>{
-						if(err){
-							res.status(500).send(err + 'll');
-						}else{
-							res.status(200).send(makeDocs(newDocs));		
-						}
-					})
-					
-
-					// console.log(newList);
+					if(err2){
+						res.status(500).send(err);
+					}else{
+						res.status(200).send(makeDocs(docList2));		
+					}
 					
 				})
 			}
 		});	
 	}
 	
+});
+
+/*when user plays a record, they must call this function*/
+app.post('/playrecord', (req, res) => {
+	if(req.body.journey_id && req.body.time && req.body.trip_id){
+		/*find the played recording*/
+		Recording.findOne({journey_id: req.body.journey_id, time: req.body.time}, (err2, record)=>{
+			if(err2){
+				res.status(500).send(err);
+			}else{
+				if(!record.users.find((entry)=> entry === req.body.trip_id)){
+					record.users.push(req.body.trip_id);
+					record.save((err)=>{
+						if(err){
+							res.status(500).send(err);
+						}else{
+							res.status(200).send("OK");
+						}
+					})
+						
+				}else{
+					/*user listened before*/
+					res.status(409).send('user listened before');
+				}
+						
+			}
+			
+		})
+	}
 });
 /*finish user trip by setting their subscription to inactive*/
 app.post('/finishTrip', (req, res) => {
