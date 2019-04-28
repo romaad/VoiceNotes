@@ -35,6 +35,7 @@ function getNotes(){
   $.get('/getRecords',{journey_id: journey_id}, (data) => {
    	console.log(JSON.stringify(data));
    	/*add each note to message dic*/
+   	$("#messages").html("");//clear first
    	data.forEach(addNotes);
    	console.log(info);
    }).fail((err)=>{
