@@ -147,47 +147,59 @@ async function multiDocsUpdate(docs, trip_id, callback){
 	callback(null, docs);
 }
 
-/*get records for user and trip*/
+/*get records for driver to see views and passenger for trip*/
 app.get('/getRecords/', (req, res) => {
-	/*get subscription for this user trip and journey*/
-	Subscription.find({journey_id: req.query.journey_id, trip_id: req.query.trip_id, is_active: true}, (err, docList) => {
-		if(err){
-			res.status(500).send('something went wrong' + err);
-			logger.error( err);
-		}else if(docList.length != 1){
-			/*if either subscription is found more than once or not found, send error*/
-			res.status(500).send('subscription not found or inactive');
-		}
-		/* if user subscribed */
-		else if(docList.length == 1){
-			/*get the time of subscription*/
-			let lastTime = docList[0].time;
-			if(req.query.lastTime && req.query.lastTime > lastTime){
-				lastTime = req.query.lastTime;
+	/*no trip id, driver*/
+	if(!req.query.trip_id){
+		Recording.find({journey_id: req.query.journey_id, time: {$gt: lastTime}}, (err2, docs)=>{
+			if(err2){
+				res.status(500).send(err2);
+			}else{
+				res.status(200).send(docs);
 			}
-			/*find recording for this journey recorded after the subscription issued*/
-			Recording.find({journey_id: req.query.journey_id, time: {$gt: lastTime}}, (err2, docList2)=>{
-				/*make new instance of recording list*/
-				multiDocsUpdate(docList2, req.query.trip_id,(err, newDocs)=>{
-					if(err){
-						res.status(500).send(err + 'll');
-					}else{
-						var newList = JSON.parse(JSON.stringify(newDocs));
-						for(var i = 0; i < newList.length ; i++){
-							/*add path property to recrods for user to use*/
-							newList[i].path = uploadPath + getFilePath(newDocs[i].journey_id, newDocs[i].time);
-							newList[i].time = newDocs[i].time;
+		});
+	}else{
+		/*get subscription for this user trip and journey*/
+		Subscription.find({journey_id: req.query.journey_id, trip_id: req.query.trip_id, is_active: true}, (err, docList) => {
+			if(err){
+				res.status(500).send('something went wrong' + err);
+				logger.error( err);
+			}else if(docList.length != 1){
+				/*if either subscription is found more than once or not found, send error*/
+				res.status(500).send('subscription not found or inactive');
+			}
+			/* if user subscribed */
+			else if(docList.length == 1){
+				/*get the time of subscription*/
+				let lastTime = docList[0].time;
+				if(req.query.lastTime && req.query.lastTime > lastTime){
+					lastTime = req.query.lastTime;
+				}
+				/*find recording for this journey recorded after the subscription issued*/
+				Recording.find({journey_id: req.query.journey_id, time: {$gt: lastTime}}, (err2, docList2)=>{
+					/*make new instance of recording list*/
+					multiDocsUpdate(docList2, req.query.trip_id,(err, newDocs)=>{
+						if(err){
+							res.status(500).send(err + 'll');
+						}else{
+							var newList = JSON.parse(JSON.stringify(newDocs));
+							for(var i = 0; i < newList.length ; i++){
+								/*add path property to recrods for user to use*/
+								newList[i].path = uploadPath + getFilePath(newDocs[i].journey_id, newDocs[i].time);
+								newList[i].time = newDocs[i].time;
+							}
+							res.status(200).send(newList);		
 						}
-						res.status(200).send(newList);		
-					}
-				})
-				
+					})
+					
 
-				// console.log(newList);
-				
-			})
-		}
-	});
+					// console.log(newList);
+					
+				})
+			}
+		});	
+	}
+	
 });
 /*finish user trip by setting their subscription to inactive*/
 app.post('/finishTrip', (req, res) => {
