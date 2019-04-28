@@ -1,6 +1,6 @@
 /*file to be used to test user(driver) side*/
 var journey_id = prompt("Please enter your journey id:", "1");
-if (person == null || person == "") {
+if (journey_id == null || journey_id == "") {
   location.reload();//we must get journey id
 }
 $(() => {

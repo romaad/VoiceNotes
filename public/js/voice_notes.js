@@ -63,7 +63,8 @@ function subscribe(){
 			/*remove any old listener to journey*/
 			socket.removeAllListeners(info.journey_id);
 			/*listen to this journey new records updates*/
-			socket.on(info.journey_id, getNotes)
+			socket.on(info.journey_id, getNotes);
+			alert('subscribed successfully');
    }).fail((err)=>{
    	alert(JSON.stringify(err));
    });
