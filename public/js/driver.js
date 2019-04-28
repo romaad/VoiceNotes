@@ -37,7 +37,7 @@ function getNotes(){
    	/*add each note to message dic*/
    	$("#messages").html("");//clear first
    	data.forEach(addNotes);
-   	console.log(info);
+   	// console.log(info);
    }).fail((err)=>{
    	alert(JSON.stringify(err));
    })
