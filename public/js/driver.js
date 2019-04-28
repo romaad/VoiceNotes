@@ -25,9 +25,9 @@ function addNotes(note){
 			</div>`;
 	   $("#messages").append(newElem);
 	   /*update last received timestamp*/
-	   if(note.time > info.lastTime){
-	   	info.lastTime = note.time;
-	   }
+	   // if(note.time > info.lastTime){
+	   // 	info.lastTime = note.time;
+	   // }
 }
 /*get voice notes for current user and add them to view*/
 function getNotes(){
