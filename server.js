@@ -151,7 +151,7 @@ async function multiDocsUpdate(docs, trip_id, callback){
 app.get('/getRecords/', (req, res) => {
 	/*no trip id, driver*/
 	if(!req.query.trip_id){
-		Recording.find({journey_id: req.query.journey_id, time: {$gt: lastTime}}, (err2, docs)=>{
+		Recording.find({journey_id: req.query.journey_id, time: {$gt: req.query.lastTime}}, (err2, docs)=>{
 			if(err2){
 				res.status(500).send(err2);
 			}else{
