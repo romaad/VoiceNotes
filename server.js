@@ -147,6 +147,16 @@ async function multiDocsUpdate(docs, trip_id, callback){
 	callback(null, docs);
 }
 
+/*makes new list for records to return to user*/
+function makeDocs(dbdocs){
+	var newList = JSON.parse(JSON.stringify(dbdocs));
+	for(var i = 0; i < newList.length ; i++){
+		/*add path property to recrods for user to use*/
+		newList[i].path = uploadPath + getFilePath(dbdocs[i].journey_id, dbdocs[i].time);
+		newList[i].time = dbdocs[i].time;
+	}
+	return newList;
+}
 /*get records for driver to see views and passenger for trip*/
 app.get('/getRecords/', (req, res) => {
 	/*no trip id, driver*/
@@ -159,7 +169,7 @@ app.get('/getRecords/', (req, res) => {
 			if(err2){
 				res.status(500).send(err2);
 			}else{
-				res.status(200).send(docs);
+				res.status(200).send(makeDocs(docs));
 			}
 		});
 	}else{
@@ -186,13 +196,7 @@ app.get('/getRecords/', (req, res) => {
 						if(err){
 							res.status(500).send(err + 'll');
 						}else{
-							var newList = JSON.parse(JSON.stringify(newDocs));
-							for(var i = 0; i < newList.length ; i++){
-								/*add path property to recrods for user to use*/
-								newList[i].path = uploadPath + getFilePath(newDocs[i].journey_id, newDocs[i].time);
-								newList[i].time = newDocs[i].time;
-							}
-							res.status(200).send(newList);		
+							res.status(200).send(makeDocs(newDocs));		
 						}
 					})
 					
