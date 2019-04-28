@@ -13,7 +13,7 @@ $(() => {
 function addNotes(note){
 		console.log(JSON.stringify(note));
 		//ignore already received notes
-		if(note.time <= info.time) return;
+		// if(note.time <= info.time) return;
 		/*use built in html5 audio player to play sounds*/
 		newElem = `<div>
 	   	${new Date(note.time).toLocaleString()}
