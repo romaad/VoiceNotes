@@ -152,12 +152,17 @@ async function multiDocsUpdate(docs, trip_id, callback){
 }
 
 /*makes new list for records to return to user*/
-function makeDocs(dbdocs){
+function makeDocs(dbdocs, isUser=false){
 	var newList = JSON.parse(JSON.stringify(dbdocs));
 	for(var i = 0; i < newList.length ; i++){
 		/*add path property to recrods for user to use*/
 		newList[i].path = uploadPath + getFilePath(dbdocs[i].journey_id, dbdocs[i].time);
 		newList[i].time = dbdocs[i].time;
+		if(isUser){
+			/*we don't want user to know senders and receivers*/
+			delete newList[i].receivers, newList[i].users;	
+		}
+		
 	}
 	return newList;
 }
@@ -178,7 +183,8 @@ app.get('/getRecords/', (req, res) => {
 		});
 	}else{
 		/*get subscription for this user trip and journey*/
-		Subscription.find({journey_id: req.query.journey_id, trip_id: req.query.trip_id, is_active: true}, (err, docList) => {
+		Subscription.find({journey_id: req.query.journey_id, trip_id: req.query.trip_id, is_active: true},
+			 (err, docList) => {
 			if(err){
 				res.status(500).send('something went wrong' + err);
 				logger.error( err);
