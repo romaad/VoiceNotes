@@ -21,7 +21,7 @@ function addNotes(note){
 			  <source src="${note.path}" type="audio/wav">
 				Your browser does not support the audio element.
 			</audio>
-			${note.users.length}
+			listened: ${note.users.length}, received: ${note.receivers.length}
 			</div>`;
 	   $("#messages").append(newElem);
 	   /*update last received timestamp*/

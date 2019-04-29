@@ -41,9 +41,9 @@ mongoose.connect(db_path, {useNewUrlParser: true}, (err) => {
 if (!fs.existsSync(savePath))
     fs.mkdirSync(savePath);
 /*initialize mongoose subscription model*/
-var Subscription = mongoose.model('Subscription',{ journey_id : String, trip_id : String, is_active: Boolean, time: Number });
+var Subscription = mongoose.model('Subscription',{ journey_id : String, trip_id : String, is_active: Boolean, time: Number});
 /*initialize records model*/
-var Recording = mongoose.model('Recording', {journey_id: String, time: Number, users: Array});
+var Recording = mongoose.model('Recording', {journey_id: String, time: Number, users: Array, receivers: Array});
 /*set public files to users*/
 app.use(express.static('public'));
 /*use body parser to get request information in req.body*/
@@ -121,7 +121,7 @@ app.post('/upload/:journey_id', upload.single('soundBlob'), function(req, res, n
   /*this part can be exchanged with remote storage service, such as AWS*/
 	fs.writeFileSync(uploadLocation, Buffer.from(new Uint8Array(req.file.buffer))); // write the blob to the server as a file
   /*make a db entry for this record*/
-  let recordEntry = new Recording({journey_id: req.params.journey_id, time: saveDate, users: []});
+  let recordEntry = new Recording({journey_id: req.params.journey_id, time: saveDate, users: [], receivers: []});
   recordEntry.save((err)=>{
   	if(err){
   		logger.error(err);
@@ -134,7 +134,22 @@ app.post('/upload/:journey_id', upload.single('soundBlob'), function(req, res, n
   });
   
 });
-
+/*add user as a receiver to all records and then continue execution path*/
+async function multiDocsUpdate(docs, trip_id, callback){
+	for(var i = 0 ; i < docs.length; i++){
+		if(!docs[i].receivers.find((entry) => entry === trip_id)){
+			/**user didn't listen to this before**/
+			/*mark user a listener*/
+			docs[i].receivers.push(trip_id);
+			try{
+				var ret = await docs[i].save();
+			}catch(err){
+				callback(err,null);
+			}
+		}	
+	}
+	callback(null, docs);
+}
 
 /*makes new list for records to return to user*/
 function makeDocs(dbdocs){
@@ -181,10 +196,19 @@ app.get('/getRecords/', (req, res) => {
 				/*find recording for this journey recorded after the subscription issued*/
 				Recording.find({journey_id: req.query.journey_id, time: {$gt: lastTime}}, (err2, docList2)=>{
 					/*make new instance of recording list*/
+
 					if(err2){
-						res.status(500).send(err);
+						res.status(500).send(err2);
 					}else{
-						res.status(200).send(makeDocs(docList2));		
+						/*add user as a receiver to those notes*/
+						multiDocsUpdate(docList2, req.query.trip_id, (err, newDocs)=>{
+							if(err){
+								res.status(500).send(err);
+							}else{
+								res.status(200).send(makeDocs(newDocs));									
+							}
+						})
+								
 					}
 					
 				})
